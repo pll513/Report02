@@ -1,0 +1,151 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[framed,numbered,autolinebreaks,useliterate]{mcode}
+\usepackage{CJKutf8}
+\setlength{\headheight}{15pt} 
+
+\usepackage{textcomp}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{color}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{times}
+\usepackage{mathptmx}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\geometry{left=3.17cm,right=3.17cm,top=2.54cm,bottom=2.54cm}
+\usepackage{indentfirst}
+\setlength{\parindent}{2em}
+\rhead{Page \thepage{} of \pageref{LastPage}}
+
+
+\begin{document}
+\begin{CJK*}{UTF8}{gbsn}
+
+
+\section{实验课题}
+在调和级数$\displaystyle(1+\frac{1}{2}+\frac{1}{3}+\cdots)$中,将分母的十进制表示中含有数字$9$的项去掉,由此得到的级数是收敛的还是发散呢?\par 
+\begin{enumerate}
+\item 请用最小二乘法拟合猜测该技术的收敛性.
+\item 从理论上研究该级数的收敛性.
+\end{enumerate}
+
+\section{级数拟合}
+
+\subsection{实验思路}
+\noindent 拟合该级数的步骤如下:
+\begin{enumerate}
+\item 首先,求出该级数在$1$到$10^8$的500个点;
+\item 接着用500个点的前100个点进行拟合;
+\item 最后画出级数和拟合曲线在$1$到$10^8$的图像;
+\item 分析图像并进行分析和预测.
+\end{enumerate}
+
+\subsection{算法简介}
+从实验的目的来看本实验实质上不涉及算法内容,但实施实验需要计算大量的点.当点的数量级扩大到$10^7$乃至$10^8$时,一般的遍历算法很难达到速度要求.所以我们需要改进求点的算法来加快求散点的速度.下面给出的是最朴素的算法1,通过一个for循环遍历点并剔除含有数字9的项.\par
+\vspace{-11pt}
+\begin{lstlisting}
+for i = 1:c
+    if  isempty(regexp(num2str(i), '9','ONCE'))
+        s = s + 1/i;
+    end
+    if ~mod(i,step)
+        Pts(:,i) = [i;s];
+    end
+end
+\end{lstlisting}
+\vspace{7pt}
+通过\textsc{Matlab}提供的tic和toc我们可以得到上述算法的运行时间.当我们取$10^6$作为输入时,上面的循环大约会花费60多秒.又因为这个算法的时间开销是随输入规模线性增长的,所以如果取$10^8$作为输入那至少需要花费6000多秒,也就是近2小时!\par
+接下来我们要做的就是分析实验的目的,并根据实验的目的重新看待这个问题.事实上,我们只需要完成以下三件事:\par
+\begin{enumerate}
+\item 从一堆整数中去掉含有数字$9$的项;
+\item 对余下的整数的导数进行求和;
+\item 以一定的步长取出和,并用来绘制散点及预测.
+\end{enumerate}\par
+算法2对输入数据规模做规定,只允许$10^k$的输入(由于计算机内存限制,$k$最多取$8$).它首先生成了一个元素从$0$到$10^k$排列的矩阵.
+\begin{equation*}
+\left(\begin{matrix}0 & 1 & \cdots & 9 & 10 & \cdots & 19 & 20 & \cdots & 88 & 89 & 90 & \cdots & 99\cr 100 & 101 & \cdots & 109 & 110 & \cdots & 119 & 120 & \cdots & 188 & 189 & 190 & \cdots & 199\cr \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots\end{matrix}\right)\\
+\end{equation*}\par\noindent
+
+
+
+
+
+
+
+
+
+\subsection{实验结果}
+第一个算法较慢,但如果输入规模为$10^7$,那10多分钟的计算时间我们还是可以接受的.绘制出的散点图如图1.观察图1的散点我们发现该级数的增长越来越慢,似乎存在上界,所以我们可以使用一个别的函数曲线来拟合这些散点来加强猜想的可信度.
+\begin{center}
+\includegraphics[width = 13.5cm]{Report02_1.jpg}\\
+\textbf{图1} 算法1在输入规模为$10^7$时绘制的散点图\\
+\end{center}
+\section{理论研究}
+\subsection{原命题的研究}
+\noindent 现给出如下命题:\par\vspace{5pt}
+在调合级数$\displaystyle(1+\frac{1}{2}+\frac{1}{3}+\cdots)$中,将分母的十进制表示中含有数字$9$的项去掉,由此得到的新级数收敛.\par\vspace{10pt}
+\noindent 证明如下:\par\vspace{5pt}
+对一个$m$位的正整数,它的第$1$位可以从除$0$和$9$外的$8$个数中取,它的后$(m-1$)位可以从$9$外的$9$个数中取.因此,共有$8\times9^{m-1}$个$m$位正整数.\par\vspace{5pt}
+此外,不难得到这样的$m$位正整数中最小的数是$10^{m-1}$.记所有不含$9$的$m$位正整数的倒数和为$S_m$,那么我们有
+\begin{equation*}
+S_m\leqslant8\times9^{m-1}\times\frac{1}{10^{m-1}}=8(\frac{9}{10})^{m-1}.
+\end{equation*}\par
+同时,我们可以把原级数表示为$S_m$在$1$到$\infty$的累加,即
+\begin{equation*}
+\sum_{m=1}^{\infty}S_m\leqslant8\sum_{m=1}^{\infty}(\frac{9}{10})^{m-1}=80.
+\end{equation*}\par
+所以原级数单调递增,且有上界$80$,为收敛级数,原命题得证.
+
+\subsection{命题拓展一}
+\noindent 现修改原命题如下:\par\vspace{5pt}
+在调合级数$\displaystyle(1+\frac{1}{2}+\frac{1}{3}+\cdots)$中,将分母的十进制表示中含有数字$a$的项去掉,其中$a\in\{0,1,2,3,4,5,6,7,8,9\}$,由此得到的新级数收敛.\par\vspace{10pt}
+\noindent 证明如下:\par\vspace{5pt}
+考虑所有不包含$a$的正$m$位数$K$:\par
+\begin{enumerate}
+\item 若$a=0$,$K$的第$n$位可以取$1$到$9$中的任意数,其中$n=1,2,\cdots,m$.所以符合条件的正$m$位数$K$的个数是$9^m$.
+\item 若$a\not=0$,$K$的第$1$位可以取$1$到$9$中不包含$n$的任意数,第$n$位可以取0到9中不包含$a$的任意数,其中$n=2,3,\cdots,m$.所以$K$的个数是$8\times9^{m-1}$.
+\end{enumerate}\par
+故$K$的个数不多于$9^m$.对所有这样的正整数$K$都有$K\geqslant10^{m-1}$.记这些数的倒数和为$S_m$,那么有
+\begin{equation*}
+S_m\leqslant9^m\times\frac{1}{10^{m-1}}=9(\frac{9}{10})^{m-1}.
+\end{equation*}\par
+把新级数表示为$S_m$在$1$到$\infty$的累加,则有
+\begin{equation*}
+\sum_{m=1}^{\infty}S_m\leqslant9\sum_{m=1}^{\infty}(\frac{9}{10})^{m-1}=90.
+\end{equation*}\par
+所以新级数单调递增,且有上界$90$,为收敛级数,从而新命题结论正确.
+
+\subsection{命题拓展二}
+\noindent 现考虑把原命题推广到p级数,并给出如下命题:\par\vspace{5pt}
+在p级数$\displaystyle(1+\frac{1}{2^p}+\frac{1}{3^p}+\cdots)$中,将分母的十进制表示中含有数字$a$的项去掉,其中$a\in\{0,1,2,3,4,5,6,7,8,9\}$.由此得到的新级数:
+\begin{center}
+收敛,当$p>\log_{10}9$;发散,当$p\leqslant\log_{10}9$.
+\end{center}
+现给出证明如下:\par\vspace{5pt}
+若$p>1$,原p级数收敛.又新级数和p级数都为无穷正项级数,由比较审敛法易证新级数收敛.\par 若$p=1$,原p级数即为调合级数,由命题拓展一中结论知新级数收敛.\par 若$p<1$,由命题拓展一中结论,我们有$m$位正整数$K$的个数不少于$8\times9^{m-1}$,且不多于$9^m$.\par
+另外,我们还可以得到$10^{m-1}\leqslant K<10^m$.现对所有这样的$m$位正整数$K$的$p$次方的倒数求和,记为$S_m$,那么有
+\begin{equation*}
+S_m\leqslant9^m\times\frac{1}{(10^{m-1})^p}=\frac{10^{m\log_{10}9}}{10^{p(m-1)}}=(\frac{1}{10})^{(p-\log_{10}9)m-p}.
+\end{equation*}\par
+当$p>\log_{10}9$时,在$1$到$\infty$对$S_m$进行累加,则有
+\begin{equation*}
+\sum_{m=1}^{\infty}S_m\leqslant\sum_{m=1}^{\infty}(\frac{1}{10})^{(p-\log_{10}9)m-p}=9(\frac{1}{10})^{-p}.
+\end{equation*}\par
+所以新级数单调递增,且有上界$9(1/10)^{-p}$,为收敛级数由此,命题的前半部分得证.下面我们继续证明命题的后半部分.事实上根据已知结论,我们还能找出有关$S_m$的类似不等关系
+\begin{equation*}
+S_m>8\times9^{m-1}\times\frac{1}{(10^m)^p}=\frac{8}{9}\times10^{m\log_{10}9}\times\frac{1}{10^{mp}}=\frac{8}{9}\times10^{(\log_{10}9-p)m}.
+\end{equation*}\par
+记$T_m=8/9\times10^{(\log_{10}9-p)m}$,那么$T_m$为首项$T_1=8/9$,公比$q=10^{(\log_{10}9-p)}$的等比数列.若$p\leqslant\log_{10}9$,我们有公比$q\geqslant1$,故正项无穷级数$\sum_{m=1}^{\infty}T_m$发散,所以$\sum_{m=1}^{\infty}S_m$也发散.\par
+因此,$p=\log_{10}9$时,新级数发散,命题的后半部分得证.\par
+综上所述,命题成立.
+\section{实验结论}
+
+\section{附录}
+
+\end{CJK*}
+\end{document}
