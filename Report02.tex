@@ -66,25 +66,100 @@ end
 \item 对余下的整数的导数进行求和;
 \item 以一定的步长取出和,并用来绘制散点及预测.
 \end{enumerate}\par
-算法2对输入数据规模做规定,只允许$10^k$的输入(由于计算机内存限制,$k$最多取$8$).它首先生成了一个元素从$0$到$10^k$排列的矩阵.
-\begin{equation*}
-\left(\begin{matrix}0 & 1 & \cdots & 9 & 10 & \cdots & 19 & 20 & \cdots & 88 & 89 & 90 & \cdots & 99\cr 100 & 101 & \cdots & 109 & 110 & \cdots & 119 & 120 & \cdots & 188 & 189 & 190 & \cdots & 199\cr \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots & \cdots\end{matrix}\right)\\
-\end{equation*}\par\noindent
+算法2对输入数据规模做规定,只允许$10^k$的输入(由于计算机内存限制,$k$最多取$8$).它首先生成了一个元素从$0$到$10^k-1$的矩阵.
 
+\[
+\begin{bmatrix}0&1&\cdots&9&10&\cdots&88&89&\cdots&99\\ 100&101&\cdots&109&110&\cdots&188&189&\cdots&199\\\cdots&\cdots&\cdots&\cdots&\cdots&\cdots&\cdots&\cdots&\cdots&\cdots\\8900&8901&\cdots&8909&8910&\cdots&8988&8989&\cdots&8999\\\cdots&\cdots&\cdots&\cdots&\cdots&\cdots&\cdots&\cdots&\cdots&\cdots\\9900&9901&\cdots&9909&9910&\cdots&9988&9989&\cdots&9999
+\end{bmatrix}
+\]\vspace{4pt}
 
+接下来以上面$100\times100$的矩阵为例(对应输入数量级为$10^4$),记该矩阵为$\textrm{\textbf{\emph{A}}}$,并记$\textrm{\textbf{\emph{A}}}$的第$i$行第$j$列元素为$\textrm{\textbf{\emph{A}}}(i,j)$,那么我们有
+\begin{enumerate}
+\item 若$\textrm{\textbf{\emph{A}}}(1,j)$的个位或十位含$9$,那么$\textrm{\textbf{\emph{A}}}(k,j)$也含$9$.($k=2,3,\cdots,100$)
+\item 若$\textrm{\textbf{\emph{A}}}(i,1)$的百位或千位含$9$,那么$\textrm{\textbf{\emph{A}}}(i,k)$也含$9$.($k=2,3,\cdots,100$)
+\item 记$P$为所有使$\textrm{\textbf{\emph{A}}}(1,j)$的个位或十位含$9$的所有$j$的取值集合,$Q$为所有使$\textrm{\textbf{\emph{A}}}(i,1)$的百位或千位含$9$的所有$i$的取值集合,则$P=Q$.
+\end{enumerate}\par
 
+事实上当$\textrm{\textbf{\emph{A}}}(1,j)$不为方阵时也有类似结论(由于行数和列数不同,需要调整第三条性质).一般的,对于$10^k$的数量级的输入,我们可以构造一个$m$行$n$列的矩阵$\textrm{\textbf{\emph{A}}}$,其中$m=\lfloor 10^{k/2} \rfloor$, $n=\lceil 10^{k/2} \rceil$.所以$\textrm{\textbf{\emph{A}}}$满足
 
+\begin{enumerate}
+\item 若$\textrm{\textbf{\emph{A}}}(1,j)$的个位或十位含$9$,那么$\textrm{\textbf{\emph{A}}}(k,j)$也含$9$.($k=2,3,\cdots,n$)
+\item 若$\textrm{\textbf{\emph{A}}}(i,1)$的百位或千位含$9$,那么$\textrm{\textbf{\emph{A}}}(i,k)$也含$9$.($k=2,3,\cdots,m$)
+\item 记$P$为所有使$\textrm{\textbf{\emph{A}}}(1,j)$的个位或十位含$9$的所有$j$的取值集合,$Q$为所有使$\textrm{\textbf{\emph{A}}}(i,1)$的百位或千位含$9$的所有$i$的取值集合,则$P \supseteq Q$.
+\end{enumerate}\par
 
+因此,对于$10^k$的输入,我们只要生成对应矩阵,并对矩阵的第一行的$10^{\lceil k/2 \rceil}$个元素做一次遍历,就能剔除所有包含$9$的数字.实现该算法比较关键的\textsc{Matlab}代码如下:\par
+\vspace{9pt}
+\noindent 首先生成矩阵,
+\vspace{-17pt}
+\begin{lstlisting}
+cSize = 10^ceil(index/2);
+rSize = 10^floor(index/2);
+I = bsxfun(@plus, 0:cSize-1, cSize*(0:rSize-1)');
+\end{lstlisting}
+\vspace{9pt}
+接着遍历矩阵第一行找到所有个位或十位含有数字9的列,
+\vspace{-17pt}
+\begin{lstlisting}
+for i = 1:cSize
+    if ~isempty(regexp(num2str(I(1,i)), '9','ONCE'))
+        C(i) = i;
+    end
+end
+\end{lstlisting}
+\vspace{9pt}
+最后删除由含$9$的数字组成的行和列.
+\vspace{-17pt}
+\begin{lstlisting}
+I(:,dCln) = [];
+I(dRow,:) = [];
+\end{lstlisting}
+\vspace{9pt}
 
+至此,我们已经把含有$9$的数字去掉了,接着我们直接在矩阵中按行求和(注意把$0$置为正无穷).
+\vspace{-17pt}
+\begin{lstlisting}
+I(1,1) = inf;
+for i = 1:step:rSize
+    Pts(:,i) = [I(i,end);sum(sum(1./I(1:i,:)))];
+end
+\end{lstlisting}
+\vspace{9pt}
 
+最后,根据一定的步长取出数据点用于拟合.我们使用$f(x) = a {\rm e}^{{-22/{\rm ln}x+b}}+c$作为拟合函数进行最小二乘拟合.其中$-22$这个系数是根据实现效果得到的.如果把这个常数作为参数进行拟合不能达到理想的实验效果(在这种情况下当数字变大时拟合函数不总是大于数据点).
+\vspace{-17pt}
+\begin{lstlisting}
+F=inline('beta(1).*exp(-22./log(x)+beta(2))+beta(3)','beta','x');
+beta = nlinfit(X(1:100),Y(1:100),F,[0 0 0])
+a = beta(1);
+b = beta(2);
+c = beta(3);
+\end{lstlisting}
+\vspace{9pt}
 
 
 \subsection{实验结果}
-第一个算法较慢,但如果输入规模为$10^7$,那10多分钟的计算时间我们还是可以接受的.绘制出的散点图如图1.观察图1的散点我们发现该级数的增长越来越慢,似乎存在上界,所以我们可以使用一个别的函数曲线来拟合这些散点来加强猜想的可信度.
+第一个算法较慢,但如果输入规模为$10^7$,那10多分钟的计算时间我们还是可以接受的.绘制出的散点图如图1.观察图1的散点我们发现该级数的增长越来越慢,似乎存在上界,所以我们可以使用一个别的函数曲线来拟合这些散点来加强猜想的可信度.\vspace{-4pt}
 \begin{center}
-\includegraphics[width = 13.5cm]{Report02_1.jpg}\\
+\includegraphics[width = 13cm]{Report02_1.jpg}\\
 \textbf{图1} 算法1在输入规模为$10^7$时绘制的散点图\\
-\end{center}
+\end{center}\par
+\vspace{8pt}
+取出算法2计算的散点中小于$10^7$的部分，并对其进行最小二乘拟合,我们可以得到拟合曲线的表达式
+\begin{equation*}
+f(x) = 23.571620{\rm e}^{{-22/{\rm ln}x-0.012688}}+6.291245.
+\end{equation*}\par
+接着我们画出$0$到$10^8$范围内的散点和$f(x)$曲线.\vspace{-4pt}
+\begin{center}
+\includegraphics[width = 13cm]{Report02_2.jpg}\\
+\textbf{图2} 算法2计算的散点和拟合曲线\\
+\end{center}\par
+\vspace{8pt}
+从图像我们发现当$x$增大时,散点位置都在拟合曲线$f(x)$的下方.此外,当$x$趋于正无穷时我们有
+\begin{equation*}
+\lim_{ x \to {+\infty}}f(x)=23.571620+6.291245=29.682825.
+\end{equation*}\par
+所以,我们可以猜测原级数收敛,且极限不大于$f(x)$的极限29.682825.
 \section{理论研究}
 \subsection{原命题的研究}
 \noindent 现给出如下命题:\par\vspace{5pt}
